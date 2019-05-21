@@ -5,7 +5,8 @@ output:
     keep_md: true
 ---
 
-```{r globalOption}
+
+```r
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -15,7 +16,8 @@ knitr::opts_chunk$set(echo = TRUE)
 Unziping the file and loading the data. Transforming the type of variable "date"
 into class date.
 
-``` {r loadingData}
+
+```r
 unzip("activity.zip")
 data <- read.csv("activity.csv")
 data$date <- as.Date(as.character(data$date), "%Y-%m-%d")
@@ -27,21 +29,46 @@ data$date <- as.Date(as.character(data$date), "%Y-%m-%d")
 Calculating the total number of steps taken per day.  
 The histogram of the total number of steps taken per day is showed below.  
 
-```{r meanSteps}
+
+```r
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 totalSteps <- data %>%
         group_by(date) %>%
         summarise(steps = sum(steps, na.rm = TRUE))
 hist(totalSteps$steps, xlab = "Steps", 
      main = "Total number of steps taken per day")
+```
 
+![](PA1_template_files/figure-html/meanSteps-1.png)<!-- -->
+
+```r
 meanOfSteps <- mean(totalSteps$steps)
 medianOfSteps <- median(totalSteps$steps)
 ```
 
 The mean and median total number of steps taken per day are 
-`r format(meanOfSteps, big.mark = ",")` and 
-`r format(medianOfSteps, big.mark = ",")` respectively.
+9,354.23 and 
+10,395 respectively.
 
 ## What is the average daily activity pattern?
 
@@ -49,7 +76,8 @@ The average daily active pattern is showed below. The x-axis is the 5-minute
 interval in one day, the y-axis is the average number of steps taken at that 
 5-minute interval across all days.
 
-```{r avgPattern}
+
+```r
 byInterval <- data %>%
         group_by(interval) %>%
         summarise(steps = mean(steps, na.rm = TRUE))
@@ -57,10 +85,15 @@ with(byInterval, plot(interval, steps, type = "l",
                       xlab = "5-min interval",
                       ylab = "Average number of steps",
                       main = "The average daily activity pattern"))
+```
+
+![](PA1_template_files/figure-html/avgPattern-1.png)<!-- -->
+
+```r
 max <- byInterval$interval[which.max(byInterval$steps)]
 ```
 
-The `r max`th 5-minute interval contains the maximum number of steps in daily 
+The 835th 5-minute interval contains the maximum number of steps in daily 
 actvity.
 
 
@@ -68,7 +101,8 @@ actvity.
 
 Here, I filled the missing values using the mean for that 5-minute interval.
 
-```{r imputeNA}
+
+```r
 NAs <- sum(!complete.cases(data))
 
 dataFilled <- data
@@ -84,20 +118,23 @@ totalSteps <- dataFilled %>%
         summarise(steps = sum(steps, na.rm = TRUE))
 hist(totalSteps$steps, xlab = "Steps", 
      main = "Total number of steps taken per day")
-
-meanOfSteps <- mean(totalSteps$steps)
-medianOfSteps <- median(totalSteps$steps)
-
 ```
 
-There are totally `r NAs` missing values in the dataset.  
+![](PA1_template_files/figure-html/imputeNA-1.png)<!-- -->
+
+```r
+meanOfSteps <- mean(totalSteps$steps)
+medianOfSteps <- median(totalSteps$steps)
+```
+
+There are totally 2304 missing values in the dataset.  
 
 `dataFilled` is a new dataset that equal to the original data with all NAs 
 imputed with the mean for that 5-min interval. 
 
 The mean and median total number of steps taken per day with imputed data are
-`r format(meanOfSteps, big.mark = ",")` and 
-`r format(medianOfSteps, big.mark = ",")` respectively. They are different from
+10,766.19 and 
+10,766.19 respectively. They are different from
 the estimates from the first part of the assignment. Imputing missing data
  increased the estimates of the total daily number of steps.
 
@@ -107,7 +144,8 @@ The plot of activity patterns between weekdays and weekends is showed below. The
 x-axis showed the 5-minute intervals in one day, the y-axis showed the average 
 number of steps taken at that 5-minute interval across all days.
 
-```{r differences}
+
+```r
 dataFilled$wday <- weekdays(dataFilled$date, abbreviate = TRUE)
 for(i in seq(nrow(dataFilled))){
         if(dataFilled$wday[i] %in% c("Sun", "Sat")) {
@@ -130,6 +168,8 @@ ggplot(data = byInterval2, aes(interval, steps)) +
              title = "Activity patterns between weekdays and weekends")+
         theme_bw()
 ```
+
+![](PA1_template_files/figure-html/differences-1.png)<!-- -->
 
 The activity pattern in weekdays is different from that in weekend. There is a
 significant peak at around 800th interval during weekdays but not during weekends.
