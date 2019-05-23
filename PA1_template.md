@@ -106,6 +106,92 @@ Here, I filled the missing values using the mean for that 5-minute interval.
 NAs <- sum(!complete.cases(data))
 
 dataFilled <- data
+```
+
+
+----------
+
+<div class="alert alert-danger">Trevor's comment</div>
+
+This is what you wanted to do but failed.
+
+
+```r
+repl = function(row) {
+    if(is.na(row[1])) {
+        interval.i = which(byInterval$interval == row[3])
+        row[1] = byInterval$steps[interval.i]
+    }
+}
+
+apply(dataFilled[1:3,], 1, repl)
+```
+
+Let's first take a look at what is the third element of each row. And from below you see that they are characters. The fact is, `apply` parse each row into the callback function, as a vector. And a vector can only bave one type, so it is coerced into character.
+
+
+```r
+apply(data[1:3,], 1, function(row){
+    row[3]
+})
+```
+
+```
+##    1    2    3 
+## " 0" " 5" "10"
+```
+
+The tricky thing of R is, `5 == "5"` actually gives you `TRUE`, so that's why it works for you sometimes. But if you do `5 == " 5"'`, it is `FALSE`. So,
+
+
+```r
+which(byInterval$interval == " 5")
+```
+
+```
+## integer(0)
+```
+
+gives you this thing above, and that's why you are getting that error message.
+
+But, in order to get what you want, there is a way easier way. See below:
+
+
+```r
+dataFilled = data %>%
+    group_by(interval) %>%
+    mutate(steps = ifelse(
+      is.na(steps),
+      mean(steps, na.rm = TRUE),
+      steps
+    ))
+dataFilled
+```
+
+```
+## # A tibble: 17,568 x 3
+## # Groups:   interval [288]
+##     steps date       interval
+##     <dbl> <date>        <int>
+##  1 1.72   2012-10-01        0
+##  2 0.340  2012-10-01        5
+##  3 0.132  2012-10-01       10
+##  4 0.151  2012-10-01       15
+##  5 0.0755 2012-10-01       20
+##  6 2.09   2012-10-01       25
+##  7 0.528  2012-10-01       30
+##  8 0.868  2012-10-01       35
+##  9 0      2012-10-01       40
+## 10 1.47   2012-10-01       45
+## # … with 17,558 more rows
+```
+
+Done
+
+----------
+
+
+```r
 for(i in seq(nrow(dataFilled))){
         if(is.na(dataFilled$steps[i])){
                 interval.i <- which(byInterval$interval == dataFilled$interval[i])
@@ -120,7 +206,7 @@ hist(totalSteps$steps, xlab = "Steps",
      main = "Total number of steps taken per day")
 ```
 
-![](PA1_template_files/figure-html/imputeNA-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 ```r
 meanOfSteps <- mean(totalSteps$steps)
